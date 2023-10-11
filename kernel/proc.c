@@ -97,6 +97,20 @@ allocpid() {
   return pid;
 }
 
+uint64
+countusedproc(void) {
+  struct proc *p;
+  uint64 count = 0;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state != UNUSED) {
+      count++;
+    }
+    release(&p->lock);
+  }
+  return count;
+}
+
 // Look in the process table for an UNUSED proc.
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.
@@ -288,6 +302,7 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->tracemask = p->tracemask;
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
